@@ -544,11 +544,11 @@
                 <div class="section-group">
                     <div class="section-header">Urine & Laboratory Data</div>
                     <div class="input-grid">
-                        <div class="full-width"><label class="field-label">24-Hour Urine Volume</label><div class="input-container"><input type="number" id="uVol" placeholder="1200" step="any" required><div class="input-suffix">mL/24h</div></div></div>
-                        <div><label class="field-label">Urine Urea N.</label><div class="input-container"><input type="number" id="uUrea" placeholder="250" step="any" required><div class="input-suffix">mg/dL</div></div></div>
-                        <div><label class="field-label">Serum BUN</label><div class="input-container"><input type="number" id="sBUN" placeholder="45" step="any" required><div class="input-suffix">mg/dL</div></div></div>
-                        <div><label class="field-label">Urine Creatinine</label><div class="input-container"><input type="number" id="uCr" placeholder="50" step="any" required><div class="input-suffix">mg/dL</div></div></div>
-                        <div><label class="field-label">Serum Creatinine</label><div class="input-container"><input type="number" id="sCr" placeholder="3.71" step="any" required><div class="input-suffix">mg/dL</div></div></div>
+                        <div class="full-width"><label class="field-label">24-Hour Urine Volume</label><div class="input-container"><input type="number" id="uVol" placeholder="1200" step="any" min="0" required><div class="input-suffix">mL/24h</div></div></div>
+                        <div><label class="field-label">Urine Urea N.</label><div class="input-container"><input type="number" id="uUrea" placeholder="250" step="any" min="0" required><div class="input-suffix">mg/dL</div></div></div>
+                        <div><label class="field-label">Serum BUN</label><div class="input-container"><input type="number" id="sBUN" placeholder="45" step="any" min="0.01" required><div class="input-suffix">mg/dL</div></div></div>
+                        <div><label class="field-label">Urine Creatinine</label><div class="input-container"><input type="number" id="uCr" placeholder="50" step="any" min="0" required><div class="input-suffix">mg/dL</div></div></div>
+                        <div><label class="field-label">Serum Creatinine</label><div class="input-container"><input type="number" id="sCr" placeholder="3.71" step="any" min="0.01" required><div class="input-suffix">mg/dL</div></div></div>
                     </div>
                 </div>
 
@@ -621,8 +621,8 @@
         }
 
         async function getGeminiInsight(prompt) {
-            // Using stable v1beta endpoint and removing strict safety overrides 
-            // to prevent CORS/Connection blocking on standard API keys.
+            // Using 'text/plain' instead of 'application/json' to bypass strict CORS
+            // preflight checks when running the HTML file locally (origin 'null').
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const payload = {
@@ -637,7 +637,7 @@
             try {
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify(payload)
                 });
                 
