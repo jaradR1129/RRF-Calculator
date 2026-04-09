@@ -591,13 +591,13 @@
             </div>
 
             <footer class="fine-print">
-                CLINICAL DECISION SUPPORT NOTICE: Estimates are based on KDOQI Guidelines using stdKt/V. Verify independently. AI insights are supportive only.
+                <strong>CLINICAL DECISION SUPPORT NOTICE:</strong> This professional tool estimates dialysis adequacy based on KDOQI Guidelines using standard Kt/V (stdKt/V). Calculations are for informational purposes only and must be verified by a clinician. AI-generated clinical notes and explanations are supportive materials and should not replace professional medical judgment or be the sole basis for adjusting patient treatment.
             </footer>
         </div>
     </div>
 
     <script>
-        const apiKey = "AIzaSyBsMPNed4U88KwVy8ODb0ODNIOfyW5yHBo".trim();
+        const apiKey = "AIzaSyBsMPNed4U88KwVy8ODb0ODNIOfyW5yHBo";
         let currentInsights = { note: "", patient: "" };
         let activeTab = 'note';
 
@@ -612,24 +612,21 @@
         function switchAITab(tab) {
             activeTab = tab;
             document.querySelectorAll('.ai-nav-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.innerText.toLowerCase().includes(tab));
+                const label = btn.innerText.toLowerCase();
+                btn.classList.toggle('active', (tab === 'note' && label.includes('note')) || (tab === 'patient' && label.includes('patient')));
             });
-            document.getElementById('copyBtn').innerText = tab === 'note' ? 'Copy Note' : 'Copy Explanation';
-            document.getElementById('aiOutput').innerText = currentInsights[tab] || "Please calculate first...";
+            const copyBtn = document.getElementById('copyBtn');
+            copyBtn.querySelector('span').innerText = tab === 'note' ? 'Copy Note' : 'Copy Explanation';
+            document.getElementById('aiOutput').innerText = currentInsights[tab] || "Generating insights...";
         }
 
         async function getGeminiInsight(prompt) {
-            // Using stable v1 endpoint and explicit safety overrides
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // Using stable v1beta endpoint and removing strict safety overrides 
+            // to prevent CORS/Connection blocking on standard API keys.
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
-                safetySettings: [
-                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                ],
                 generationConfig: {
                     temperature: 0.2,
                     topP: 0.8,
@@ -644,20 +641,17 @@
                     body: JSON.stringify(payload)
                 });
                 
-                const data = await response.json();
-                
-                if (data.error) {
-                    console.error("Gemini API Detail:", data.error);
-                    if (data.error.status === "PERMISSION_DENIED") {
-                        return "AI Error: Access Denied. Your region (likely EU/UK) may require billing to be enabled in Google AI Studio, or this key is restricted.";
-                    }
-                    return `AI Error: ${data.error.message}`;
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error("API Error Response:", response.status, errorData);
+                    return `API Error (${response.status}): ${errorData.error?.message || "Invalid API key or restricted domain."}`;
                 }
                 
+                const data = await response.json();
                 return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
             } catch (e) {
-                console.error("Fetch Error:", e);
-                return "Connection Error: Unable to reach the AI engine. Please check your internet or firewall.";
+                console.error("Fetch/Network Error:", e);
+                return `Connection Error: Ensure your API key is correct. If the key is valid, temporarily disable Ad-Blockers or Brave Shields, as they sometimes block Google APIs.`;
             }
         }
 
