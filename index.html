@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Hemodialysis + RRF Calculator | Clinical Adequacy</title>
+        <style>
+            :root {
+                --primary: #4f46e5;
+                --primary-hover: #4338ca;
+                --primary-light: #f5f3ff;
+                --accent: #06b6d4;
+                --bg-body: #f8fafc;
+                --bg-card: #ffffff;
+                --bg-section: #ffffff;
+                --text-main: #1e293b;
+                --text-muted: #64748b;
+                --border: #e2e8f0;
+                --input-bg: #f8fafc;
+                --success: #10b981;
+                --danger: #ef4444;
+                --warning: #f59e0b;
+                --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+                --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+                --radius-md: 12px;
+                --radius-lg: 24px;
+            }
+    
+            body.dark-mode {
+                --bg-body: #0f172a;
+                --bg-card: #1e293b;
+                --bg-section: #1e293b;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --border: #334155;
+                --input-bg: #0f172a;
+                --primary-light: #312e81;
+            }
+    
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                background-color: var(--bg-body);
+                color: var(--text-main);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                padding: 20px;
+                line-height: 1.6;
+                transition: all 0.3s ease;
+            }
+    
+            .calculator-container {
+                width: 100%;
+                max-width: 620px;
+                background: var(--bg-card);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-lg);
+                border: 1px solid var(--border);
+                overflow: hidden;
+                position: relative;
+            }
+    
+            .action-bar {
+                display: flex;
+                justify-content: flex-end;
+                gap: 12px;
+                padding: 20px 30px 0;
+                position: absolute;
+                top: 0;
+                right: 0;
+                z-index: 10;
+            }
+    
+            .icon-btn {
+                width: 42px;
+                height: 42px;
+                border-radius: 50%;
+                background: var(--bg-card);
+                border: 1px solid var(--border);
+                color: var(--text-muted);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: var(--shadow-sm);
+            }
+    
+            .icon-btn:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+                transform: translateY(-2px);
+            }
+    
+            .header {
+                padding: 50px 40px 30px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+                background: linear-gradient(135deg, var(--primary-light) 0%, transparent 100%);
+            }
+    
+            .header h1 {
+                margin: 0;
+                font-size: 1.8rem;
+                font-weight: 800;
+                letter-spacing: -0.03em;
+                color: var(--primary);
+            }
+    
+            .header p {
+                margin: 8px 0 0;
+                color: var(--text-muted);
+                font-size: 0.95rem;
+                font-weight: 500;
+            }
+    
+            .form-body {
+                padding: 40px;
+            }
+    
+            .section-group {
+                margin-bottom: 40px;
+            }
+    
+            .section-header {
+                font-size: 0.85rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: var(--primary);
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+    
+            .section-header svg {
+                width: 20px;
+                height: 20px;
+                color: var(--primary);
+                opacity: 0.8;
+            }
+    
+            .section-header::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: var(--border);
+            }
+    
+            .input-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+    
+            .full-width {
+                grid-column: span 2;
+            }
+    
+            .field-label {
+                display: block;
+                font-size: 0.85rem;
+                font-weight: 700;
+                margin-bottom: 8px;
+                color: var(--text-main);
+            }
+    
+            .input-container {
+                display: flex;
+                align-items: stretch;
+                background: var(--input-bg);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-md);
+                transition: all 0.2s ease;
+            }
+    
+            .input-container:focus-within {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            }
+    
+            .input-container input, .input-container select {
+                flex: 1;
+                background: transparent;
+                border: none;
+                padding: 14px 16px;
+                font-size: 1rem;
+                color: var(--text-main);
+                outline: none;
+                font-family: inherit;
+                width: 100%;
+            }
+    
+            .input-suffix {
+                padding: 0 16px;
+                display: flex;
+                align-items: center;
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: var(--text-muted);
+                background: rgba(0,0,0,0.02);
+                border-left: 1px solid var(--border);
+            }
+    
+            select.unit-select {
+                border: none;
+                background: transparent;
+                padding: 0 10px;
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: var(--text-muted);
+                cursor: pointer;
+                outline: none;
+            }
+    
+            .calculate-btn {
+                width: 100%;
+                padding: 18px;
+                background: var(--primary);
+                color: white;
+                border: none;
+                border-radius: var(--radius-md);
+                font-size: 1.1rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 12px;
+            }
+    
+            .calculate-btn:hover {
+                background: var(--primary-hover);
+                transform: translateY(-2px);
+                box-shadow: 0 15px 20px -3px rgba(79, 70, 229, 0.4);
+            }
+    
+            .results-section {
+                display: none;
+                margin-top: 40px;
+                padding: 30px;
+                background: var(--bg-section);
+                border: 2px solid var(--border);
+                border-radius: var(--radius-lg);
+                animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+    
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+    
+            .results-header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+    
+            .score-hero {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 25px;
+            }
+    
+            .score-value {
+                font-size: 4rem;
+                font-weight: 900;
+                color: var(--primary);
+                line-height: 1;
+            }
+    
+            .score-label {
+                font-size: 0.9rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.2em;
+                color: var(--text-muted);
+                margin-top: 10px;
+            }
+    
+            .stats-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+                margin-top: 20px;
+            }
+    
+            .stat-card {
+                background: var(--bg-body);
+                padding: 15px;
+                border-radius: var(--radius-md);
+                border: 1px solid var(--border);
+            }
+    
+            .stat-card span:first-child {
+                display: block;
+                font-size: 0.7rem;
+                font-weight: 800;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                margin-bottom: 4px;
+            }
+    
+            .stat-card span:last-child {
+                font-weight: 700;
+                color: var(--text-main);
+            }
+    
+            .target-indicator {
+                margin-top: 25px;
+                padding: 15px;
+                border-radius: var(--radius-md);
+                text-align: center;
+                font-weight: 800;
+                font-size: 0.9rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+    
+            /* AI Section */
+            .ai-assistant-container {
+                margin-top: 35px;
+                background: #fdfcfe;
+                border: 1px solid #e9d5ff;
+                border-radius: var(--radius-md);
+                overflow: hidden;
+                box-shadow: 0 4px 6px -1px rgba(126, 34, 206, 0.05);
+            }
+    
+            .ai-header {
+                background: #faf5ff;
+                padding: 18px 24px;
+                border-bottom: 1px solid #e9d5ff;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+    
+            .ai-header h3 {
+                margin: 0;
+                font-size: 0.95rem;
+                font-weight: 800;
+                color: #7e22ce;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+    
+            .ai-body {
+                padding: 24px;
+            }
+    
+            .ai-nav {
+                display: flex;
+                gap: 12px;
+                margin-bottom: 20px;
+                border-bottom: 1px solid #f1f5f9;
+                padding-bottom: 12px;
+            }
+    
+            .ai-nav-btn {
+                background: transparent;
+                border: 2px solid transparent;
+                padding: 8px 16px;
+                border-radius: var(--radius-md);
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: var(--text-muted);
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+    
+            .ai-nav-btn:hover { color: #7e22ce; }
+            .ai-nav-btn.active {
+                background: #f5f3ff;
+                color: #7e22ce;
+                border-color: #7e22ce;
+            }
+    
+            .ai-content {
+                font-size: 0.95rem;
+                color: var(--text-main);
+                line-height: 1.6;
+                white-space: pre-wrap;
+                min-height: 120px;
+                background: #fff;
+                padding: 16px;
+                border-radius: 8px;
+                border: 1px solid #f1f5f9;
+            }
+    
+            .ai-copy-btn {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                background: white;
+                border: 1px solid var(--border);
+                padding: 4px 10px;
+                border-radius: 6px;
+                font-size: 0.7rem;
+                font-weight: 700;
+                color: var(--text-muted);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+    
+            /* Modal Styling */
+            .modal-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.8);
+                backdrop-filter: blur(8px);
+                z-index: 1000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+    
+            .modal-content {
+                background: var(--bg-card);
+                max-width: 800px;
+                width: 100%;
+                border-radius: var(--radius-lg);
+                overflow: hidden;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                border: 1px solid var(--border);
+                animation: fadeIn 0.3s ease;
+            }
+    
+            .modal-header {
+                padding: 24px 32px;
+                background: var(--primary-light);
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+    
+            .modal-header h2 {
+                margin: 0;
+                font-size: 1.25rem;
+                font-weight: 800;
+                color: var(--primary);
+            }
+    
+            .modal-body {
+                padding: 32px;
+                overflow-x: auto;
+            }
+    
+            .guideline-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.9rem;
+                text-align: left;
+            }
+    
+            .guideline-table th {
+                background: var(--bg-body);
+                padding: 14px 16px;
+                font-weight: 800;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                color: var(--text-muted);
+                border-bottom: 2px solid var(--border);
+            }
+    
+            .guideline-table td {
+                padding: 16px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-main);
+            }
+    
+            .guideline-table tr:hover {
+                background: var(--primary-light);
+            }
+    
+            .close-modal {
+                background: transparent;
+                border: none;
+                color: var(--text-muted);
+                cursor: pointer;
+                font-size: 1.5rem;
+                line-height: 1;
+            }
+    
+            .fine-print {
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                font-size: 0.65rem;
+                color: var(--text-muted);
+                text-align: center;
+                line-height: 1.4;
+            }
+    
+            @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+    
+            @media print {
+                .action-bar, .calculate-btn, .form-body, .ai-assistant-container, .modal-overlay { display: none !important; }
+                .calculator-container { box-shadow: none; border: none; max-width: 100%; }
+                .results-section { display: block !important; border: 2px solid #000; margin-top: 0; }
+                .header { border-bottom: 3px solid #000; padding: 30px 0; }
+                body { background: white; padding: 0; }
+            }
+        </style>
+    </head>
+    <body>
+    
+        <!-- KDOQI Guidelines Modal -->
+        <div id="guidelinesModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>KDOQI Dialysis Targets</h2>
+                    <button class="close-modal" onclick="toggleModal('guidelinesModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <table class="guideline-table">
+                        <thead>
+                            <tr>
+                                <th>Modality</th>
+                                <th>Schedule</th>
+                                <th>Target Kt/V</th>
+                                <th>Minimum</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Hemodialysis</strong></td>
+                                <td>Thrice weekly (3x/wk)</td>
+                                <td>1.4 / session</td>
+                                <td>1.2 / session</td>
+                                <td>spKt/V</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hemodialysis</strong></td>
+                                <td>Non-thrice weekly</td>
+                                <td>2.3 / week</td>
+                                <td>2.1 / week</td>
+                                <td>stdKt/V (inc UF/RKF)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Peritoneal</strong></td>
+                                <td>CAPD/APD with RKF*</td>
+                                <td>1.7 / week</td>
+                                <td>1.7 / week</td>
+                                <td>Total Kt/V</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Peritoneal</strong></td>
+                                <td>CAPD/APD without RKF**</td>
+                                <td>1.7 / week</td>
+                                <td>1.7 / week</td>
+                                <td>Peritoneal only</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 16px;">
+                        *RKF: Residual Kidney Function. References: [1] KDOQI Hemodialysis Adequacy Guideline, [2] KDOQI Peritoneal Dialysis Adequacy Guideline.
+                    </p>
+                </div>
+            </div>
+        </div>
+    
+        <div class="calculator-container">
+            <div class="action-bar">
+                <button class="icon-btn" onclick="toggleModal('guidelinesModal')" title="KDOQI Guidelines Table">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </button>
+                <button class="icon-btn" id="printBtn" onclick="window.print()" style="display:none;" title="Print Report">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                </button>
+                <button class="icon-btn" id="themeBtn" title="Toggle Theme">
+                    <svg id="moonIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+            </div>
+    
+            <div class="header">
+                <h1>Hemodialysis + RRF Calculator</h1>
+                <p>Determine dialysis adequacy with residual renal function</p>
+            </div>
+    
+            <div class="form-body">
+                <form id="calcForm" onsubmit="calculate(event)">
+                    
+                    <!-- Demographics -->
+                    <div class="section-group">
+                        <div class="section-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            Patient Demographics
+                        </div>
+                        <div class="input-grid">
+                            <div>
+                                <label class="field-label">Gender</label>
+                                <div class="input-container">
+                                    <select id="sex" required>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="field-label">Age</label>
+                                <div class="input-container">
+                                    <input type="number" id="age" placeholder="65" step="any" required>
+                                    <div class="input-suffix">Yrs</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="field-label">Weight</label>
+                                <div class="input-container">
+                                    <input type="number" id="weight" step="any" placeholder="70.5" required>
+                                    <div class="input-suffix">kg</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="field-label">Height</label>
+                                <div class="input-container">
+                                    <input type="number" id="height" step="any" placeholder="170" required>
+                                    <select id="hUnit" class="unit-select">
+                                        <option value="cm">cm</option>
+                                        <option value="in">in</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Labs -->
+                    <div class="section-group">
+                        <div class="section-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3h15"/><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M6 14h12"/></svg>
+                            Urine & Laboratory Data
+                        </div>
+                        <div class="input-grid">
+                            <div class="full-width">
+                                <label class="field-label">24-Hour Urine Volume</label>
+                                <div class="input-container">
+                                    <input type="number" id="uVol" placeholder="e.g. 1200" step="any" min="0" required>
+                                    <div class="input-suffix">mL/24h</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="field-label">Urine Urea N.</label>
+                                <div class="input-container">
+                                    <input type="number" id="uUrea" placeholder="250" step="any" min="0" required>
+                                    <div class="input-suffix">mg/dL</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="field-label">Serum BUN</label>
+                                <div class="input-container">
+                                    <input type="number" id="sBUN" placeholder="45" step="any" min="0.01" required>
+                                    <div class="input-suffix">mg/dL</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="field-label">Urine Creatinine</label>
+                                <div class="input-container">
+                                    <input type="number" id="uCr" placeholder="50" step="any" min="0" required>
+                                    <div class="input-suffix">mg/dL</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="field-label">Serum Creatinine</label>
+                                <div class="input-container">
+                                    <input type="number" id="sCr" placeholder="3.71" step="any" min="0.01" required>
+                                    <div class="input-suffix">mg/dL</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Prescription -->
+                    <div class="section-group">
+                        <div class="section-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                            Dialysis Prescription
+                        </div>
+                        <div class="input-grid">
+                            <div>
+                                <label class="field-label">Weekly Frequency</label>
+                                <div class="input-container">
+                                    <select id="freq">
+                                        <option value="2" selected>2x Weekly</option>
+                                        <option value="3">3x Weekly</option>
+                                        <option value="4">4x Weekly</option>
+                                        <option value="5">5x Weekly</option>
+                                        <option value="6">6x Weekly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="field-label">Weekly StdKt/V</label>
+                                <div class="input-container">
+                                    <input type="number" id="labWeeklyStd" placeholder="e.g. 2.0" step="any" required>
+                                    <div class="input-suffix">Lab Val</div>
+                                </div>
+                                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Standard Kt/V from lab report.</p>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <button type="submit" class="calculate-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+                        Calculate Combined Weekly KtV
+                    </button>
+                </form>
+    
+                <div id="results" class="results-section">
+                    <div class="results-header">
+                        <div class="score-hero">
+                            <span id="resTotal" class="score-value">--</span>
+                            <span class="score-label">Total Weekly stdKt/V</span>
+                        </div>
+                    </div>
+    
+                    <div class="stats-grid">
+                        <div class="stat-card"><span>Mean Res. GFR</span><span id="resMeanGfr">--</span></div>
+                        <div class="stat-card"><span>Urea Clear. (Kru)</span><span id="resKru">--</span></div>
+                        <div class="stat-card"><span>Creat. Clear. (Krc)</span><span id="resKrc">--</span></div>
+                        <div class="stat-card"><span>Volume (Watson)</span><span id="resV">--</span></div>
+                        <div class="stat-card"><span>Weekly Renal stdKt/V</span><span id="resRenalKtV">--</span></div>
+                        <div class="stat-card"><span>Weekly Dialytic stdKt/V</span><span id="resDktv">--</span></div>
+                    </div>
+    
+                    <div id="badge" class="target-indicator">Evaluating...</div>
+    
+                    <div class="ai-assistant-container">
+                        <div class="ai-header">
+                            <h3>✨ AI Clinical Assistant</h3>
+                        </div>
+                        <div class="ai-body">
+                            <div class="ai-nav">
+                                <button class="ai-nav-btn active" onclick="switchAITab('note')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                                    Draft Clinical Note
+                                </button>
+                                <button class="ai-nav-btn" onclick="switchAITab('patient')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                    Explain to Patient
+                                </button>
+                            </div>
+                            <div class="ai-content-wrapper" style="position: relative;">
+                                <button class="ai-copy-btn" id="copyBtn" onclick="copyAIText()" title="Copy to Clipboard">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                    <span style="margin-left: 4px;">Copy Note</span>
+                                </button>
+                                <div id="aiOutput" class="ai-content">Clinical insights will appear here after evaluation...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+                <footer class="fine-print">
+                    <strong>CLINICAL DECISION SUPPORT NOTICE:</strong> This professional tool estimates dialysis adequacy based on KDOQI Guidelines using standard Kt/V (stdKt/V). Calculations are for informational purposes only and must be verified by a clinician. AI-generated clinical notes and explanations are supportive materials and should not replace professional medical judgment or be the sole basis for adjusting patient treatment.
+                </footer>
+            </div>
+        </div>
+    
+        <script>
+            const apiKey = "AIzaSyBsMPNed4U88KwVy8ODb0ODNIOfyW5yHBo";
+            let currentInsights = { note: "", patient: "" };
+            let activeTab = 'note';
+    
+            function toggleModal(id) {
+                const modal = document.getElementById(id);
+                modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+            }
+    
+            const themeBtn = document.getElementById('themeBtn');
+            themeBtn.addEventListener('click', () => document.body.classList.toggle('dark-mode'));
+    
+            function switchAITab(tab) {
+                activeTab = tab;
+                document.querySelectorAll('.ai-nav-btn').forEach(btn => {
+                    const label = btn.innerText.toLowerCase();
+                    btn.classList.toggle('active', (tab === 'note' && label.includes('note')) || (tab === 'patient' && label.includes('patient')));
+                });
+                const copyBtn = document.getElementById('copyBtn');
+                copyBtn.querySelector('span').innerText = tab === 'note' ? 'Copy Note' : 'Copy Explanation';
+                document.getElementById('aiOutput').innerText = currentInsights[tab] || "Generating insights...";
+            }
+    
+            async function getGeminiInsight(prompt) {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                for (let i = 0; i < 5; i++) {
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await response.json();
+                        return data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    } catch (e) {
+                        await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+                    }
+                }
+                return "Unable to connect to AI engine.";
+            }
+    
+            function copyAIText() {
+                const text = document.getElementById('aiOutput').innerText;
+                const btn = document.getElementById('copyBtn');
+                const span = btn.querySelector('span');
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                span.innerText = "Copied!";
+                setTimeout(() => span.innerText = (activeTab === 'note' ? "Copy Note" : "Copy Explanation"), 2000);
+            }
+    
+            async function generateAIInsights(data) {
+                const outputEl = document.getElementById('aiOutput');
+                outputEl.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><span>Synthesizing clinical analysis...</span></div>`;
+    
+                const systemContext = `You are a specialized Nephrology AI Assistant. 
+                Patient Stats: Total Weekly stdKt/V ${data.totalKtV}, Renal Contribution ${data.renalKtV}, Lab Dialytic stdKt/V ${data.labWeeklyStd}.
+                Residual Kidney Data: Mean GFR ${data.meanGfr} mL/min, Kru ${data.kru}, Krc ${data.krc}. Frequency: ${data.freq}x/wk.
+                Rules: Output plain text ONLY. Absolutely NO markdown symbols (*, #, _, etc.).`;
+    
+                const prompts = {
+                    note: `Draft a clinical EHR summary for a nephrologist.
+                    Structure:
+                    Assessment: State the total weekly stdKt/V and explicitly quantify the contribution from residual renal function (Kru-based). List Mean GFR and individual clearances (Kru, Krc).
+                    Impression: Give a determination on the adequacy of the current ${data.freq}x/week schedule relative to KDOQI targets (2.3 for 2x/wk). Recommend maintenance or adjustment.
+                    Plain text only. No markdown.`,
+                    patient: `Provide a detailed yet accessible explanation of these results for the patient.
+                    Topics to cover:
+                    1. What standard Kt/V means (the balance of cleaning).
+                    2. The "partner" metaphor: Explain that their natural kidney function and the dialysis machine are working as a team.
+                    3. The value of their remaining function: Explain why keeping their urine output is a gift for their lifestyle.
+                    4. Simple Terms summary: At the end, provide a very short, 2-sentence summary using basic language.
+                    Plain text only. No introductory fluff. No markdown symbols.`
+                };
+    
+                const results = await Promise.all([
+                    getGeminiInsight(systemContext + " " + prompts.note),
+                    getGeminiInsight(systemContext + " " + prompts.patient)
+                ]);
+    
+                currentInsights.note = results[0];
+                currentInsights.patient = results[1];
+                outputEl.innerText = currentInsights[activeTab];
+            }
+    
+            function calculate(e) {
+                e.preventDefault();
+                const sex = document.getElementById('sex').value;
+                const age = parseFloat(document.getElementById('age').value);
+                const weight = parseFloat(document.getElementById('weight').value);
+                let height = parseFloat(document.getElementById('height').value);
+                if(document.getElementById('hUnit').value === 'in') height *= 2.54;
+                
+                const uVol = parseFloat(document.getElementById('uVol').value);
+                const uUrea = parseFloat(document.getElementById('uUrea').value);
+                const sBUN = parseFloat(document.getElementById('sBUN').value);
+                const uCr = parseFloat(document.getElementById('uCr').value); 
+                const sCr = parseFloat(document.getElementById('sCr').value);
+                
+                const freq = parseInt(document.getElementById('freq').value);
+                const labWeeklyStd = parseFloat(document.getElementById('labWeeklyStd').value);
+    
+                const kru = (uUrea * uVol) / (sBUN * 1440);
+                const krc = (uCr * uVol) / (sCr * 1440);
+                const meanGfr = (kru + krc) / 2;
+                let v = (sex === 'male') ? 2.447 - (0.09156 * age) + (0.1074 * height) + (0.3362 * weight) : -2.097 + (0.1069 * height) + (0.2466 * weight);
+                const renalWeeklyClearanceL = (kru * 10080) / 1000;
+                const renalWeeklyKtV = renalWeeklyClearanceL / v;
+                const totalKtV = labWeeklyStd + renalWeeklyKtV;
+    
+                document.getElementById('resMeanGfr').textContent = meanGfr.toFixed(2) + ' mL/min';
+                document.getElementById('resKru').textContent = kru.toFixed(2) + ' mL/min';
+                document.getElementById('resKrc').textContent = krc.toFixed(2) + ' mL/min';
+                document.getElementById('resRenalKtV').textContent = renalWeeklyKtV.toFixed(2);
+                document.getElementById('resV').textContent = v.toFixed(2) + ' L';
+                document.getElementById('resDktv').textContent = labWeeklyStd.toFixed(2);
+                document.getElementById('resTotal').textContent = totalKtV.toFixed(2);
+    
+                const badge = document.getElementById('badge');
+                let target = (freq == 2) ? 2.3 : 2.1;
+                let min = (freq == 2) ? 2.1 : 2.1;
+    
+                if(totalKtV >= target) {
+                    badge.textContent = `Adequate (Target ≥ ${target})`;
+                    badge.style.backgroundColor = 'rgba(16, 185, 129, 0.1)'; badge.style.color = '#10b981'; badge.style.border = '1px solid #10b981';
+                } else if (totalKtV >= min) {
+                    badge.textContent = `Marginal (Min ≥ ${min}, Target ${target})`;
+                    badge.style.backgroundColor = 'rgba(245, 158, 11, 0.1)'; badge.style.color = '#f59e0b'; badge.style.border = '1px solid #f59e0b';
+                } else {
+                    badge.textContent = `Inadequate (Below ${min})`;
+                    badge.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; badge.style.color = '#ef4444'; badge.style.border = '1px solid #ef4444';
+                }
+    
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('printBtn').style.display = 'flex';
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    
+                generateAIInsights({ 
+                    sex, age, weight, height, uVol, 
+                    kru: kru.toFixed(2), krc: krc.toFixed(2), meanGfr: meanGfr.toFixed(2), 
+                    renalKtV: renalWeeklyKtV.toFixed(2),
+                    totalKtV: totalKtV.toFixed(2), freq, v: v.toFixed(2), labWeeklyStd: labWeeklyStd.toFixed(2)
+                });
+            }
+        </script>
+    </body>
+    </html>
