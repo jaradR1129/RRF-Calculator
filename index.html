@@ -597,7 +597,7 @@
     </div>
 
     <script>
-        const apiKey = "AIzaSyBsMPNed4U88KwVy8ODb0ODNIOfyW5yHBo";
+        const apiKey = "AIzaSyBsMPNed4U88KwVy8ODb0ODNIOfyW5yHBo".trim();
         let currentInsights = { note: "", patient: "" };
         let activeTab = 'note';
 
@@ -619,9 +619,23 @@
         }
 
         async function getGeminiInsight(prompt) {
-            // Using standard stable model for live environment
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            // Using stable v1 endpoint and explicit safety overrides
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                safetySettings: [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                ],
+                generationConfig: {
+                    temperature: 0.2,
+                    topP: 0.8,
+                    topK: 40
+                }
+            };
             
             try {
                 const response = await fetch(url, {
@@ -633,14 +647,17 @@
                 const data = await response.json();
                 
                 if (data.error) {
-                    console.error("Gemini API Error:", data.error.message);
-                    return `AI Error: ${data.error.message}. Please check your API key settings or region.`;
+                    console.error("Gemini API Detail:", data.error);
+                    if (data.error.status === "PERMISSION_DENIED") {
+                        return "AI Error: Access Denied. Your region (likely EU/UK) may require billing to be enabled in Google AI Studio, or this key is restricted.";
+                    }
+                    return `AI Error: ${data.error.message}`;
                 }
                 
                 return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
             } catch (e) {
-                console.error("Connection Error:", e);
-                return "Connection Error: Please check your internet or firewall settings.";
+                console.error("Fetch Error:", e);
+                return "Connection Error: Unable to reach the AI engine. Please check your internet or firewall.";
             }
         }
 
@@ -662,11 +679,20 @@
             const out = document.getElementById('aiOutput');
             out.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><span>Generating clinical analysis...</span></div>`;
 
-            const systemContext = `You are a Nephrology AI Assistant. Patient: Total stdKt/V ${data.totalKtV}, Renal contrib ${data.renalKtV}, Lab stdKt/V ${data.labWeeklyStd}. Mean GFR ${data.meanGfr} mL/min (Kru ${data.kru}, Krc ${data.krc}). Schedule: ${data.freq}x/wk. Rules: PLAIN TEXT ONLY. NO markdown symbols (*, #, _, etc).`;
+            const systemContext = `You are a Nephrology AI Assistant. 
+            Rules: PLAIN TEXT ONLY. NO markdown symbols (*, #, _, etc). No bolding markers.
+            Data: Total stdKt/V ${data.totalKtV}, Renal contrib ${data.renalKtV}, Mean GFR ${data.meanGfr} mL/min (Kru ${data.kru}, Krc ${data.krc}). Schedule: ${data.freq}x/wk.`;
 
             const prompts = {
-                note: `Draft a concise EMR note for a nephrologist. State total stdKt/V and specific RKF contribution. Note Mean GFR and clearances. Impression: Is ${data.freq}x/wk adequate per KDOQI targets (2.3)? No formatting.`,
-                patient: `Detailed educational explanation for patient. Use metaphors like dialysis and natural kidneys as teammates. Explain why their urine output is a gift. End with a 2-sentence 'Simple Terms' summary. No markdown.`
+                note: `Draft a concise EMR note for a nephrologist. 
+                Assessment: Total weekly stdKt/V is ${data.totalKtV}. Explicitly state the contribution from residual renal function (${data.renalKtV}). List Mean GFR and clearances. 
+                Impression: State if ${data.freq}x/wk is adequate per KDOQI targets (2.3).
+                Instructions: Plain text only. No markdown formatting. No headers.`,
+                patient: `Detailed educational explanation for patient. 
+                Use the "teammate" metaphor for natural kidneys and dialysis. 
+                Explain why their urine output/natural function (Mean GFR ${data.meanGfr}) is so valuable for their lifestyle. 
+                End with a 'Simple Terms' summary (2 sentences max). 
+                Instructions: Plain text only. No markdown formatting. No fluff.`
             };
 
             const [n, p] = await Promise.all([
