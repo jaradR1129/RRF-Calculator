@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hemodialysis + RRF Calculator | Clinical Adequacy</title>
+    <title>Residual Renal Function Calculator & Assessment</title>
     <style>
         :root {
             --primary: #4f46e5;
@@ -529,14 +529,17 @@
         </div>
 
         <div class="header">
-            <h1>Hemodialysis + RRF Calculator</h1>
-            <p>Determine dialysis adequacy with residual renal function</p>
+            <h1>Residual Renal Function Calculator & Assessment</h1>
+            <p>Determine the combined weekly stdKtV from RRF and Hemodialysis</p>
         </div>
 
         <div class="form-body">
             <form id="calcForm" onsubmit="calculate(event)">
                 <div class="section-group">
-                    <div class="section-header">Patient Demographics</div>
+                    <div class="section-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Patient Demographics
+                    </div>
                     <div class="input-grid">
                         <div><label class="field-label">Gender</label><div class="input-container"><select id="sex"><option value="male">Male</option><option value="female">Female</option></select></div></div>
                         <div><label class="field-label">Age</label><div class="input-container"><input type="number" id="age" placeholder="65" step="any" required><div class="input-suffix">Yrs</div></div></div>
@@ -546,7 +549,10 @@
                 </div>
 
                 <div class="section-group">
-                    <div class="section-header">Urine & Laboratory Data</div>
+                    <div class="section-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3h15"></path><path d="M10 3v7.53c0 .17-.06.33-.16.46L4 18.5A2 2 0 0 0 5.61 22h12.78A2 2 0 0 0 20 18.5l-5.84-7.51a.68.68 0 0 1-.16-.46V3"></path></svg>
+                        Urine & Laboratory Data
+                    </div>
                     <div class="input-grid">
                         <div class="full-width"><label class="field-label">24-Hour Urine Volume</label><div class="input-container"><input type="number" id="uVol" placeholder="1200" step="any" min="0" required><div class="input-suffix">mL/24h</div></div></div>
                         <div><label class="field-label">Urine Urea N.</label><div class="input-container"><input type="number" id="uUrea" placeholder="250" step="any" min="0" required><div class="input-suffix">mg/dL</div></div></div>
@@ -557,7 +563,10 @@
                 </div>
 
                 <div class="section-group">
-                    <div class="section-header">Dialysis Prescription</div>
+                    <div class="section-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                        Dialysis Prescription
+                    </div>
                     <div class="input-grid">
                         <div><label class="field-label">Weekly Frequency</label><div class="input-container"><select id="freq"><option value="2" selected>2x Weekly</option><option value="3">3x Weekly</option><option value="4">4x Weekly</option><option value="5">5x Weekly</option><option value="6">6x Weekly</option></select></div></div>
                         <div><label class="field-label">Weekly StdKt/V</label><div class="input-container"><input type="number" id="labWeeklyStd" placeholder="2.0" step="any" required><div class="input-suffix">Lab Val</div></div></div>
