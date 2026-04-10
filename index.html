@@ -625,28 +625,45 @@
             document.getElementById('aiOutput').innerText = currentInsights[tab] || "Generating insights...";
         }
 
-        async function getGeminiInsight(prompt) {
-            // Calling our secure middleman instead of Google directly
+        async function getGeminiInsight(prompt, retries = 3, delay = 1500) {
             const url = `/api/gemini`; 
             
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt })
-                });
-                
-                if (!response.ok) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: prompt })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
+                    }
+                    
+                    // If the server is busy (503) or rate-limited (429) and we have retries left
+                    if ((response.status === 503 || response.status === 429) && i < retries - 1) {
+                        console.warn(`Attempt ${i + 1} failed. Server busy. Retrying in ${delay}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // Double the wait time for the next attempt
+                        continue; // Go back to the top of the loop and try again
+                    }
+                    
+                    // If out of retries or it's a different error entirely
                     const errorData = await response.json().catch(() => ({}));
                     console.error("Server Error:", response.status, errorData);
-                    return `Error: Could not generate insight. Please check your backend connection.`;
+                    return `Error: AI service is currently overloaded. Please try again in a few minutes.`;
+
+                } catch (e) {
+                    // For general network connection issues
+                    if (i < retries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    console.error("Fetch/Network Error:", e);
+                    return `Connection Error: Please try again.`;
                 }
-                
-                const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
-            } catch (e) {
-                console.error("Fetch/Network Error:", e);
-                return `Connection Error: Please try again.`;
             }
         }
 
