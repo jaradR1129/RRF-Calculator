@@ -679,10 +679,10 @@
                 Instructions: Plain text only. No markdown formatting. No fluff.`
             };
 
-            const [n, p] = await Promise.all([
-                getGeminiInsight(systemContext + " " + prompts.note),
-                getGeminiInsight(systemContext + " " + prompts.patient)
-            ]);
+            // Ask for the note first, wait, then ask for the explanation
+            const n = await getGeminiInsight(systemContext + " " + prompts.note);
+            const p = await getGeminiInsight(systemContext + " " + prompts.patient);
+
 
             currentInsights.note = n;
             currentInsights.patient = p;
