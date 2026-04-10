@@ -616,8 +616,8 @@
                 btn.classList.toggle('active', (tab === 'note' && label.includes('note')) || (tab === 'patient' && label.includes('patient')));
             });
             const copyBtn = document.getElementById('copyBtn');
-            copyBtn.querySelector('span').innerText = tab === 'note' ? 'Copy Note' : 'Copy Explanation';
-            document.getElementById('aiOutput').innerText = currentInsights[tab] || "Generating insights...";
+            copyBtn.innerText = tab === 'note' ? 'Copy Note' : 'Copy Explanation';
+            document.getElementById('aiOutput').innerText = currentInsights[tab] || "Generating insights...";;
         }
 
         async function getGeminiInsight(prompt) {
