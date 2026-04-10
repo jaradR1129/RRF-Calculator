@@ -461,6 +461,10 @@
             color: var(--text-muted);
             text-align: center;
         }
+        
+        .fine-print p {
+            margin: 5px 0;
+        }
 
         .loading-spinner {
             display: flex;
@@ -591,7 +595,8 @@
             </div>
 
             <footer class="fine-print">
-                <strong>CLINICAL DECISION SUPPORT NOTICE:</strong> This professional tool estimates dialysis adequacy based on KDOQI Guidelines using standard Kt/V (stdKt/V). Calculations are for informational purposes only and must be verified by a clinician. AI-generated clinical notes and explanations are supportive materials and should not replace professional medical judgment or be the sole basis for adjusting patient treatment.
+                <p><strong>CLINICAL DECISION SUPPORT NOTICE:</strong> This professional tool estimates dialysis adequacy based on KDOQI Guidelines using standard Kt/V (stdKt/V). Calculations are for informational purposes only and must be verified by a clinician. AI-generated clinical notes and explanations are supportive materials and should not replace professional medical judgment or be the sole basis for adjusting patient treatment.</p>
+                <p style="margin-top: 10px; color: var(--text-muted);">&copy; 2026 William Jarad Raney, MD. All Rights Reserved.</p>
             </footer>
         </div>
     </div>
@@ -617,7 +622,7 @@
             });
             const copyBtn = document.getElementById('copyBtn');
             copyBtn.innerText = tab === 'note' ? 'Copy Note' : 'Copy Explanation';
-            document.getElementById('aiOutput').innerText = currentInsights[tab] || "Generating insights...";;
+            document.getElementById('aiOutput').innerText = currentInsights[tab] || "Generating insights...";
         }
 
         async function getGeminiInsight(prompt) {
@@ -682,7 +687,6 @@
             // Ask for the note first, wait, then ask for the explanation
             const n = await getGeminiInsight(systemContext + " " + prompts.note);
             const p = await getGeminiInsight(systemContext + " " + prompts.patient);
-
 
             currentInsights.note = n;
             currentInsights.patient = p;
