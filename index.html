@@ -597,7 +597,7 @@
     </div>
 
     <script>
-        const apiKey = "AIzaSyBsMPNed4U88KwVy8ODb0ODNIOfyW5yHBo";
+        // NO MORE API KEY HERE!
         let currentInsights = { note: "", patient: "" };
         let activeTab = 'note';
 
@@ -621,35 +621,27 @@
         }
 
         async function getGeminiInsight(prompt) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-            
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.2,
-                    topP: 0.8,
-                    topK: 40
-                }
-            };
+            // Calling our secure middleman instead of Google directly
+            const url = `/api/gemini`; 
             
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ prompt: prompt })
                 });
                 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    console.error("API Error Response:", response.status, errorData);
-                    return `API Error (${response.status}): ${errorData.error?.message || "Invalid API key or restricted domain."}`;
+                    console.error("Server Error:", response.status, errorData);
+                    return `Error: Could not generate insight. Please check your backend connection.`;
                 }
                 
                 const data = await response.json();
                 return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
             } catch (e) {
                 console.error("Fetch/Network Error:", e);
-                return `Connection Error: Ensure your API key is correct. If the key is valid, temporarily disable Ad-Blockers or Brave Shields, as they sometimes block Google APIs.`;
+                return `Connection Error: Please try again.`;
             }
         }
 
