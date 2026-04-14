@@ -7,7 +7,7 @@
     <script>
         window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     </script>
-    <script defer src="/_vercel/insights/script.js"></script>
+    <script src="/_vercel/insights/script.js"></script>
     <style>
         :root {
             --primary: #4f46e5;
@@ -638,7 +638,7 @@
             document.getElementById('aiOutput').innerText = currentInsights[tab] || "Generating insights...";
         }
 
-        async function getGeminiInsight(prompt, retries = 3, delay = 1500) {
+        async function getGeminiInsight(prompt, retries = 5, delay = 1000) {
             const url = `/api/gemini`; 
             
             for (let i = 0; i < retries; i++) {
@@ -646,7 +646,7 @@
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt: prompt })
+                        body: JSON.stringify({ prompt: prompt }) 
                     });
                     
                     if (response.ok) {
@@ -698,6 +698,14 @@
             const out = document.getElementById('aiOutput');
             out.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><span>Generating clinical analysis...</span></div>`;
 
+            // --- NEW: DYNAMIC KDOQI TARGET LOGIC ---
+            let kdoqiGuideline = "";
+            if (data.freq === 3) {
+                kdoqiGuideline = "Target is based on spKt/V: 1.4 per session (minimum 1.2 per session). Note: The calculated data aggregates weekly stdKt/V, so contextualize the difference between the provided weekly stdKt/V and the per-session spKt/V guidelines.";
+            } else {
+                kdoqiGuideline = "Target is based on stdKt/V: 2.3 per week (minimum 2.1 per week).";
+            }
+
             const systemContext = `You are a Nephrology AI Assistant. 
             Rules: PLAIN TEXT ONLY. NO markdown symbols (*, #, _, etc). No bolding markers.
             Data: Total stdKt/V ${data.totalKtV}, Renal contrib ${data.renalKtV}, Mean GFR ${data.meanGfr} mL/min (Kru ${data.kru}, Krc ${data.krc}). Schedule: ${data.freq}x/wk.`;
@@ -705,7 +713,7 @@
             const prompts = {
                 note: `Draft a concise EMR note for a nephrologist. 
                 Assessment: Total weekly stdKt/V is ${data.totalKtV}. Explicitly state the contribution from residual renal function (${data.renalKtV}). List Mean GFR and clearances. 
-                Impression: State if ${data.freq}x/wk is adequate per KDOQI targets (2.3).
+                Impression: Evaluate adequacy based on the following KDOQI guideline for a ${data.freq}x/wk schedule: ${kdoqiGuideline}
                 Instructions: Plain text only. No markdown formatting. No headers.`,
                 patient: `Detailed educational explanation for patient. 
                 Use the "teammate" metaphor for natural kidneys and dialysis. 
@@ -756,19 +764,32 @@
             document.getElementById('resDktv').textContent = labWeeklyStd.toFixed(2);
             document.getElementById('resTotal').textContent = totalKtV.toFixed(2);
 
+            // --- NEW: UI BADGE LOGIC ---
             const badge = document.getElementById('badge');
-            let target = (freq == 2) ? 2.3 : 2.1;
-            let min = (freq == 2) ? 2.1 : 2.1;
-
-            if(totalKtV >= target) {
-                badge.textContent = `Adequate (Target ≥ ${target})`;
-                badge.style.backgroundColor = 'rgba(16, 185, 129, 0.1)'; badge.style.color = '#10b981';
-            } else if (totalKtV >= min) {
-                badge.textContent = `Marginal (Min ≥ ${min}, Target ${target})`;
-                badge.style.backgroundColor = 'rgba(245, 158, 11, 0.1)'; badge.style.color = '#f59e0b';
+            
+            if (freq === 3) {
+                // Thrice weekly targets spKt/V per session.
+                badge.textContent = `Thrice Weekly (Target spKt/V ≥ 1.4/session)`;
+                badge.style.backgroundColor = 'rgba(79, 70, 229, 0.1)'; 
+                badge.style.color = '#4f46e5';
             } else {
-                badge.textContent = `Inadequate (Below ${min})`;
-                badge.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; badge.style.color = '#ef4444';
+                // Non-thrice weekly targets weekly stdKt/V.
+                let target = 2.3;
+                let min = 2.1;
+
+                if (totalKtV >= target) {
+                    badge.textContent = `Adequate (Target stdKt/V ≥ ${target})`;
+                    badge.style.backgroundColor = 'rgba(16, 185, 129, 0.1)'; 
+                    badge.style.color = '#10b981';
+                } else if (totalKtV >= min) {
+                    badge.textContent = `Marginal (Min ≥ ${min}, Target ${target})`;
+                    badge.style.backgroundColor = 'rgba(245, 158, 11, 0.1)'; 
+                    badge.style.color = '#f59e0b';
+                } else {
+                    badge.textContent = `Inadequate (Below stdKt/V ${min})`;
+                    badge.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; 
+                    badge.style.color = '#ef4444';
+                }
             }
 
             document.getElementById('results').style.display = 'block';
