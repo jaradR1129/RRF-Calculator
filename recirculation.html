@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hemodialysis Access Recirculation Calculator</title>
+    <title>Residual Renal Function Calculator</title>
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script src="/_vercel/insights/script.js"></script>
     <style>
         :root {
-            --primary: #0ea5e9;
-            --primary-hover: #0284c7;
-            --primary-light: #f0f9ff;
-            --accent: #3b82f6;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #f5f3ff;
+            --accent: #06b6d4;
             --bg-body: #f8fafc;
             --bg-card: #ffffff;
             --bg-section: #ffffff;
@@ -21,6 +25,7 @@
             --danger: #ef4444;
             --warning: #f59e0b;
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
             --radius-md: 12px;
             --radius-lg: 24px;
@@ -34,7 +39,7 @@
             --text-muted: #94a3b8;
             --border: #334155;
             --input-bg: #0f172a;
-            --primary-light: #0c4a6e;
+            --primary-light: #312e81;
         }
 
         body {
@@ -51,14 +56,9 @@
             transition: all 0.3s ease;
         }
 
-        .container {
+        .calculator-container {
             width: 100%;
-            max-width: 800px;
-            display: grid;
-            gap: 20px;
-        }
-
-        .card {
+            max-width: 620px;
             background: var(--bg-card);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-lg);
@@ -76,6 +76,30 @@
             top: 0;
             right: 0;
             z-index: 10;
+        }
+
+        /* NEW SWITCH BUTTON STYLES */
+        .switch-app-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--primary);
+            padding: 0 16px;
+            height: 42px;
+            border-radius: 21px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .switch-app-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            background: var(--primary-light);
         }
 
         .icon-btn {
@@ -100,7 +124,7 @@
         }
 
         .header {
-            padding: 40px 40px 25px;
+            padding: 90px 40px 30px;
             text-align: left;
             border-bottom: 1px solid var(--border);
             background: linear-gradient(135deg, var(--primary-light) 0%, transparent 100%);
@@ -121,48 +145,48 @@
             font-weight: 500;
         }
 
-        .content-body {
-            padding: 30px 40px;
+        .form-body {
+            padding: 40px;
         }
 
-        .protocol-box {
-            background: var(--input-bg);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--primary);
-            border-radius: var(--radius-md);
-            padding: 20px 25px;
-            margin-bottom: 30px;
+        .section-group {
+            margin-bottom: 40px;
         }
 
-        .protocol-box h3 {
-            margin: 0 0 15px 0;
-            font-size: 1.1rem;
-            color: var(--text-main);
+        .section-header {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
         }
 
-        .protocol-steps {
-            margin: 0;
-            padding-left: 20px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
+        .section-header svg {
+            width: 20px;
+            height: 20px;
+            color: var(--primary);
+            opacity: 0.8;
         }
 
-        .protocol-steps li {
-            margin-bottom: 8px;
-        }
-
-        .protocol-steps li strong {
-            color: var(--text-main);
+        .section-header::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border);
         }
 
         .input-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-bottom: 30px;
+        }
+
+        .full-width {
+            grid-column: span 2;
         }
 
         .field-label {
@@ -184,10 +208,10 @@
 
         .input-container:focus-within {
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
         }
 
-        .input-container input {
+        .input-container input, .input-container select {
             flex: 1;
             background: transparent;
             border: none;
@@ -210,6 +234,17 @@
             border-left: 1px solid var(--border);
         }
 
+        select.unit-select {
+            border: none;
+            background: transparent;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            outline: none;
+        }
+
         .calculate-btn {
             width: 100%;
             padding: 18px;
@@ -221,48 +256,48 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
 
         .calculate-btn:hover {
             background: var(--primary-hover);
             transform: translateY(-2px);
-        }
-
-        .error-msg {
-            color: var(--danger);
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-top: 10px;
-            text-align: center;
-            display: none;
+            box-shadow: 0 15px 20px -3px rgba(79, 70, 229, 0.4);
         }
 
         .results-section {
             display: none;
-            margin-top: 30px;
+            margin-top: 40px;
             padding: 30px;
             background: var(--bg-section);
             border: 2px solid var(--border);
-            border-radius: var(--radius-md);
-            animation: slideUp 0.5s ease;
-            text-align: center;
+            border-radius: var(--radius-lg);
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
         }
 
         .score-hero {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .score-value {
-            font-size: 4.5rem;
+            font-size: 4rem;
             font-weight: 900;
             color: var(--primary);
             line-height: 1;
@@ -272,238 +307,528 @@
             font-size: 0.9rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.2em;
             color: var(--text-muted);
             margin-top: 10px;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 50px;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-body);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .stat-card span:first-child {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .stat-card span:last-child {
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .target-indicator {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            text-align: center;
             font-weight: 800;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 20px;
         }
 
-        .badge.normal { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-        .badge.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
-        .badge.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-
-        .clinical-action {
-            background: var(--bg-body);
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            color: var(--text-main);
-            border: 1px solid var(--border);
-            text-align: left;
+        .ai-assistant-container {
+            margin-top: 35px;
+            background: #fdfcfe;
+            border: 1px solid #e9d5ff;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(126, 34, 206, 0.05);
         }
 
-        .clinical-action span {
-            display: block;
+        .ai-header {
+            background: #faf5ff;
+            padding: 18px 24px;
+            border-bottom: 1px solid #e9d5ff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ai-header h3 {
+            margin: 0;
+            font-size: 0.95rem;
             font-weight: 800;
-            margin-bottom: 5px;
-            color: var(--primary);
-            font-size: 0.75rem;
+            color: #7e22ce;
             text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+
+        .ai-body {
+            padding: 24px;
+        }
+
+        .ai-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
+        }
+
+        .ai-nav-btn {
+            background: transparent;
+            border: 2px solid transparent;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-nav-btn.active {
+            background: #f5f3ff;
+            color: #7e22ce;
+            border-color: #7e22ce;
+        }
+
+        .ai-content {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            min-height: 120px;
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .ai-copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: white;
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            max-width: 800px;
+            width: 100%;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-header {
+            padding: 24px 32px;
+            background: var(--primary-light);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body { padding: 32px; overflow-x: auto; }
+
+        .guideline-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .guideline-table th { background: var(--bg-body); padding: 14px 16px; text-align: left; font-weight: 800; border-bottom: 2px solid var(--border); }
+        .guideline-table td { padding: 16px; border-bottom: 1px solid var(--border); }
 
         .fine-print {
-            margin-top: 30px;
+            margin-top: 40px;
             padding-top: 20px;
             border-top: 1px solid var(--border);
             font-size: 0.65rem;
             color: var(--text-muted);
             text-align: center;
         }
-
-        .app-switch-btn {
-            background: var(--bg-body);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 0 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-            box-shadow: var(--shadow-sm);
-            height: 42px;
-        }
         
-        .app-switch-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            transform: translateY(-2px);
+        .fine-print p {
+            margin: 5px 0;
         }
 
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            color: #7e22ce;
+            font-weight: 700;
+            font-size: 0.9rem;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e9d5ff;
+            border-top: 3px solid #7e22ce;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ADDED TO HIDE SWITCH BUTTON DURING PRINTING */
         @media print {
-            .action-bar, .calculate-btn, #calcForm { display: none !important; }
-            .card { box-shadow: none; border: none; }
+            .action-bar, .calculate-btn, #calcForm, .ai-assistant-container, .modal-overlay, .switch-app-btn { display: none !important; }
+            .calculator-container { box-shadow: none; border: none; max-width: 100%; }
             .results-section { display: block !important; border: 2px solid #000; margin-top: 0; }
+            .header { border-bottom: 3px solid #000; padding: 30px 0; }
             body { background: white; padding: 0; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="card">
-            <div class="action-bar">
-                <a href="index.html" class="app-switch-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    RRF Calc
-                </a>
-                <button class="icon-btn" id="printBtn" onclick="window.print()" style="display:none;" title="Print Results">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
-                </button>
-                <button class="icon-btn" id="themeBtn" title="Toggle Theme">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                </button>
+    <div id="guidelinesModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>KDOQI Dialysis Targets</h2>
+                <button style="background:transparent;border:none;font-size:1.5rem;cursor:pointer" onclick="toggleModal('guidelinesModal')">&times;</button>
             </div>
-
-            <div class="header">
-                <h1>Access Recirculation Calculator</h1>
-                <p>Standardized Slow-Flow Urea Protocol for AV Fistulas & Grafts</p>
-            </div>
-
-            <div class="content-body">
-                
-                <!-- Protocol Section -->
-                <div class="protocol-box">
-                    <h3>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        Clinical Blood Draw Protocol (Slow-Flow Method)
-                    </h3>
-                    <ol class="protocol-steps">
-                        <li>Wait until approx <strong>30 minutes</strong> into the dialysis treatment.</li>
-                        <li>Turn off Ultrafiltration <strong>(UF rate = 0)</strong>.</li>
-                        <li>Draw the <strong>Arterial (A)</strong> and <strong>Venous (V)</strong> line samples from their respective ports.</li>
-                        <li>Decrease blood pump speed (BFR) to <strong>120 mL/min</strong> for 10 seconds, then immediately turn blood pump <strong>OFF</strong>.</li>
-                        <li>Clamp the arterial line just above the needle.</li>
-                        <li>Draw the <strong>Systemic (S)</strong> sample from the arterial port.</li>
-                        <li>Unclamp the line, and resume normal BFR and UF rate.</li>
-                    </ol>
-                </div>
-
-                <!-- Calculator Form -->
-                <form id="calcForm" onsubmit="calculate(event)">
-                    <div class="input-grid">
-                        <div>
-                            <label class="field-label">Systemic BUN (S)</label>
-                            <div class="input-container">
-                                <input type="number" id="bunS" placeholder="e.g. 60" step="any" required>
-                                <div class="input-suffix">mg/dL</div>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="field-label">Arterial Line BUN (A)</label>
-                            <div class="input-container">
-                                <input type="number" id="bunA" placeholder="e.g. 58" step="any" required>
-                                <div class="input-suffix">mg/dL</div>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="field-label">Venous Line BUN (V)</label>
-                            <div class="input-container">
-                                <input type="number" id="bunV" placeholder="e.g. 15" step="any" required>
-                                <div class="input-suffix">mg/dL</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="calculate-btn">Calculate Recirculation %</button>
-                    <div id="errorMsg" class="error-msg">Invalid data: Systemic BUN should be higher than Venous BUN. Please check values.</div>
-                </form>
-
-                <!-- Results Section -->
-                <div id="results" class="results-section">
-                    <div class="score-hero">
-                        <span id="resValue" class="score-value">--%</span>
-                        <span class="score-label">Access Recirculation</span>
-                    </div>
-                    
-                    <div id="resBadge" class="badge">Evaluating...</div>
-
-                    <div class="clinical-action">
-                        <span>Clinical Recommendation</span>
-                        <p id="resAction" style="margin: 0;">--</p>
-                    </div>
-                </div>
-
-                <footer class="fine-print">
-                    <p><strong>Formula:</strong> Recirculation (%) = [(Systemic BUN - Arterial BUN) / (Systemic BUN - Venous BUN)] × 100</p>
-                    <p><strong>Notice:</strong> This tool is intended for clinical decision support by trained dialysis staff. While KDOQI guidelines recommend investigating recirculation > 5% for fistulas and > 10% for grafts, any significant recirculation warrants a vascular access evaluation. Please consult with the attending nephrologist.</p>
-                    <p style="margin-top: 10px; color: var(--text-muted);">&copy; 2026 William Jarad Raney, MD. All Rights Reserved.</p>
-                </footer>
-
+            <div class="modal-body">
+                <table class="guideline-table">
+                    <thead>
+                        <tr><th>Modality</th><th>Schedule</th><th>Target Kt/V</th><th>Minimum</th><th>Type</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>Hemodialysis</strong></td><td>Thrice weekly (3x/wk)</td><td>1.4 / session</td><td>1.2 / session</td><td>spKt/V</td></tr>
+                        <tr><td><strong>Hemodialysis</strong></td><td>Non-thrice weekly</td><td>2.3 / week</td><td>2.1 / week</td><td>stdKt/V</td></tr>
+                        <tr><td><strong>Peritoneal</strong></td><td>CAPD/APD with RKF</td><td>1.7 / week</td><td>1.7 / week</td><td>Total Kt/V</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
+    <div class="calculator-container">
+        <div class="action-bar">
+            <a href="recirculation.html" class="switch-app-btn" title="Switch to Recirculation Calculator">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/>
+                </svg>
+                <span>Recirculation</span>
+            </a>
+            
+            <button class="icon-btn" onclick="toggleModal('guidelinesModal')" title="KDOQI Guidelines"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></button>
+            <button class="icon-btn" id="printBtn" onclick="window.print()" style="display:none;" title="Print"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg></button>
+            <button class="icon-btn" id="themeBtn" title="Theme"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+        </div>
+
+        <div class="header">
+            <h1>Residual Renal Function Calculator</h1>
+            <p>Determine the combined weekly stdKtV from RRF and Hemodialysis</p>
+        </div>
+
+        <div class="form-body">
+            <form id="calcForm" onsubmit="calculate(event)">
+                <div class="section-group">
+                    <div class="section-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Patient Demographics
+                    </div>
+                    <div class="input-grid">
+                        <div><label class="field-label">Gender</label><div class="input-container"><select id="sex"><option value="male">Male</option><option value="female">Female</option></select></div></div>
+                        <div><label class="field-label">Age</label><div class="input-container"><input type="number" id="age" placeholder="65" step="any" required><div class="input-suffix">Yrs</div></div></div>
+                        <div><label class="field-label">Weight</label><div class="input-container"><input type="number" id="weight" step="any" placeholder="70.5" required><div class="input-suffix">kg</div></div></div>
+                        <div><label class="field-label">Height</label><div class="input-container"><input type="number" id="height" step="any" placeholder="170" required><select id="hUnit" class="unit-select"><option value="cm">cm</option><option value="in">in</option></select></div></div>
+                    </div>
+                </div>
+
+                <div class="section-group">
+                    <div class="section-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3h15"></path><path d="M10 3v7.53c0 .17-.06.33-.16.46L4 18.5A2 2 0 0 0 5.61 22h12.78A2 2 0 0 0 20 18.5l-5.84-7.51a.68.68 0 0 1-.16-.46V3"></path></svg>
+                        Urine & Laboratory Data
+                    </div>
+                    <div class="input-grid">
+                        <div class="full-width"><label class="field-label">24-Hour Urine Volume</label><div class="input-container"><input type="number" id="uVol" placeholder="1200" step="any" min="0" required><div class="input-suffix">mL/24h</div></div></div>
+                        <div><label class="field-label">Urine Urea N.</label><div class="input-container"><input type="number" id="uUrea" placeholder="250" step="any" min="0" required><div class="input-suffix">mg/dL</div></div></div>
+                        <div><label class="field-label">Serum BUN</label><div class="input-container"><input type="number" id="sBUN" placeholder="45" step="any" min="0.01" required><div class="input-suffix">mg/dL</div></div></div>
+                        <div><label class="field-label">Urine Creatinine</label><div class="input-container"><input type="number" id="uCr" placeholder="50" step="any" min="0" required><div class="input-suffix">mg/dL</div></div></div>
+                        <div><label class="field-label">Serum Creatinine</label><div class="input-container"><input type="number" id="sCr" placeholder="3.71" step="any" min="0.01" required><div class="input-suffix">mg/dL</div></div></div>
+                    </div>
+                </div>
+
+                <div class="section-group">
+                    <div class="section-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                        Dialysis Prescription
+                    </div>
+                    <div class="input-grid">
+                        <div><label class="field-label">Weekly Frequency</label><div class="input-container"><select id="freq"><option value="2" selected>2x Weekly</option><option value="3">3x Weekly</option><option value="4">4x Weekly</option><option value="5">5x Weekly</option><option value="6">6x Weekly</option></select></div></div>
+                        <div><label class="field-label">spKt/V or StdKt/V</label><div class="input-container"><input type="number" id="labWeeklyStd" placeholder="2.0" step="any" required><div class="input-suffix">Lab Val</div></div></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="calculate-btn">Calculate Combined Weekly KtV</button>
+            </form>
+
+            <div id="results" class="results-section">
+                <div class="results-header"><div class="score-hero"><span id="resTotal" class="score-value">--</span><span class="score-label">Total Weekly stdKt/V</span></div></div>
+                <div class="stats-grid">
+                    <div class="stat-card"><span>Mean Res. GFR</span><span id="resMeanGfr">--</span></div>
+                    <div class="stat-card"><span>Urea Clear. (Kru)</span><span id="resKru">--</span></div>
+                    <div class="stat-card"><span>Creat. Clear. (Krc)</span><span id="resKrc">--</span></div>
+                    <div class="stat-card"><span>Volume (Watson)</span><span id="resV">--</span></div>
+                    <div class="stat-card"><span>Weekly Renal stdKt/V</span><span id="resRenalKtV">--</span></div>
+                    <div class="stat-card"><span>Weekly Dialytic stdKt/V</span><span id="resDktv">--</span></div>
+                </div>
+                <div id="badge" class="target-indicator">Evaluating...</div>
+
+                <div class="ai-assistant-container">
+                    <div class="ai-header"><h3>✨ AI Clinical Assistant</h3></div>
+                    <div class="ai-body">
+                        <div class="ai-nav">
+                            <button class="ai-nav-btn active" onclick="switchAITab('note')">Draft Clinical Note</button>
+                            <button class="ai-nav-btn" onclick="switchAITab('patient')">Explain to Patient</button>
+                        </div>
+                        <div class="ai-content-wrapper" style="position: relative;">
+                            <button class="ai-copy-btn" id="copyBtn" onclick="copyAIText()">Copy Note</button>
+                            <div id="aiOutput" class="ai-content">Clinical insights will appear here...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="fine-print">
+                <p><strong>CLINICAL DECISION SUPPORT NOTICE:</strong> This professional tool estimates dialysis adequacy based on KDOQI Guidelines using standard Kt/V (stdKt/V). Calculations are for informational purposes only and must be verified by a clinician. AI-generated clinical notes and explanations are supportive materials and should not replace professional medical judgment or be the sole basis for adjusting patient treatment.</p>
+                <p style="margin-top: 10px; color: var(--text-muted);">&copy; 2026 William Jarad Raney, MD. All Rights Reserved.</p>
+            </footer>
+        </div>
+    </div>
+
     <script>
-        // Theme toggle logic
+        // NO MORE API KEY HERE!
+        let currentInsights = { note: "", patient: "" };
+        let activeTab = 'note';
+
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+
         const themeBtn = document.getElementById('themeBtn');
         themeBtn.addEventListener('click', () => document.body.classList.toggle('dark-mode'));
 
+        function switchAITab(tab) {
+            activeTab = tab;
+            document.querySelectorAll('.ai-nav-btn').forEach(btn => {
+                const label = btn.innerText.toLowerCase();
+                btn.classList.toggle('active', (tab === 'note' && label.includes('note')) || (tab === 'patient' && label.includes('patient')));
+            });
+            const copyBtn = document.getElementById('copyBtn');
+            copyBtn.innerText = tab === 'note' ? 'Copy Note' : 'Copy Explanation';
+            document.getElementById('aiOutput').innerText = currentInsights[tab] || "Generating insights...";
+        }
+
+        async function getGeminiInsight(prompt, retries = 5, delay = 1000) {
+            const url = `/api/gemini`; 
+            
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: prompt }) 
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
+                    }
+                    
+                    // If the server is busy (503) or rate-limited (429) and we have retries left
+                    if ((response.status === 503 || response.status === 429) && i < retries - 1) {
+                        console.warn(`Attempt ${i + 1} failed. Server busy. Retrying in ${delay}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // Double the wait time for the next attempt
+                        continue; // Go back to the top of the loop and try again
+                    }
+                    
+                    // If out of retries or it's a different error entirely
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error("Server Error:", response.status, errorData);
+                    return `Error: AI service is currently overloaded. Please try again in a few minutes.`;
+
+                } catch (e) {
+                    // For general network connection issues
+                    if (i < retries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    console.error("Fetch/Network Error:", e);
+                    return `Connection Error: Please try again.`;
+                }
+            }
+        }
+
+        function copyAIText() {
+            const text = document.getElementById('aiOutput').innerText;
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            const btn = document.getElementById('copyBtn');
+            const original = btn.innerText;
+            btn.innerText = "Copied!";
+            setTimeout(() => btn.innerText = original, 2000);
+        }
+
+        async function generateAIInsights(data) {
+            const out = document.getElementById('aiOutput');
+            out.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><span>Generating clinical analysis...</span></div>`;
+
+            // --- NEW: DYNAMIC KDOQI TARGET LOGIC ---
+            let kdoqiGuideline = "";
+            if (data.freq === 3) {
+                kdoqiGuideline = "Target is based on spKt/V: 1.4 per session (minimum 1.2 per session). Note: The calculated data aggregates weekly stdKt/V, so contextualize the difference between the provided weekly stdKt/V and the per-session spKt/V guidelines.";
+            } else {
+                kdoqiGuideline = "Target is based on stdKt/V: 2.3 per week (minimum 2.1 per week).";
+            }
+
+            const systemContext = `You are a Nephrology AI Assistant. 
+            Rules: PLAIN TEXT ONLY. NO markdown symbols (*, #, _, etc). No bolding markers.
+            Data: Total stdKt/V ${data.totalKtV}, Renal contrib ${data.renalKtV}, Mean GFR ${data.meanGfr} mL/min (Kru ${data.kru}, Krc ${data.krc}). Schedule: ${data.freq}x/wk.`;
+
+            const prompts = {
+                note: `Draft a concise EMR note for a nephrologist. 
+                Assessment: Total weekly stdKt/V is ${data.totalKtV}. Explicitly state the contribution from residual renal function (${data.renalKtV}). List Mean GFR and clearances. 
+                Impression: Evaluate adequacy based on the following KDOQI guideline for a ${data.freq}x/wk schedule: ${kdoqiGuideline}
+                Instructions: Plain text only. No markdown formatting. No headers.`,
+                patient: `Detailed educational explanation for patient. 
+                Use the "teammate" metaphor for natural kidneys and dialysis. 
+                Explain why their urine output/natural function (Mean GFR ${data.meanGfr}) is so valuable for their lifestyle. 
+                End with a 'Simple Terms' summary (2 sentences max). 
+                Instructions: Plain text only. No markdown formatting. No fluff.`
+            };
+
+            // Ask for the note first, wait, then ask for the explanation
+            const n = await getGeminiInsight(systemContext + " " + prompts.note);
+            const p = await getGeminiInsight(systemContext + " " + prompts.patient);
+
+            currentInsights.note = n;
+            currentInsights.patient = p;
+            out.innerText = currentInsights[activeTab];
+        }
+
         function calculate(e) {
             e.preventDefault();
+            const sex = document.getElementById('sex').value;
+            const age = parseFloat(document.getElementById('age').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            let height = parseFloat(document.getElementById('height').value);
+            if(document.getElementById('hUnit').value === 'in') height *= 2.54;
             
-            const S = parseFloat(document.getElementById('bunS').value);
-            const A = parseFloat(document.getElementById('bunA').value);
-            const V = parseFloat(document.getElementById('bunV').value);
-            const errorMsg = document.getElementById('errorMsg');
-            const results = document.getElementById('results');
+            const uVol = parseFloat(document.getElementById('uVol').value);
+            const uUrea = parseFloat(document.getElementById('uUrea').value);
+            const sBUN = parseFloat(document.getElementById('sBUN').value);
+            const uCr = parseFloat(document.getElementById('uCr').value);
+            const sCr = parseFloat(document.getElementById('sCr').value);
+            const freq = parseInt(document.getElementById('freq').value);
+            const labWeeklyStd = parseFloat(document.getElementById('labWeeklyStd').value);
 
-            // Basic validation to prevent division by zero or nonsensical results
-            if (S <= V || A < V) {
-                errorMsg.style.display = 'block';
-                results.style.display = 'none';
-                return;
+            if (sBUN <= 0 || sCr <= 0) return;
+
+            const kru = (uUrea * uVol) / (sBUN * 1440);
+            const krc = (uCr * uVol) / (sCr * 1440);
+            const meanGfr = (kru + krc) / 2;
+            let v = (sex === 'male') ? 2.447 - (0.09156 * age) + (0.1074 * height) + (0.3362 * weight) : -2.097 + (0.1069 * height) + (0.2466 * weight);
+            const renalKtV = (kru * 10080) / 1000 / v;
+            const totalKtV = labWeeklyStd + renalKtV;
+
+            document.getElementById('resMeanGfr').textContent = meanGfr.toFixed(2) + ' mL/min';
+            document.getElementById('resKru').textContent = kru.toFixed(2) + ' mL/min';
+            document.getElementById('resKrc').textContent = krc.toFixed(2) + ' mL/min';
+            document.getElementById('resRenalKtV').textContent = renalKtV.toFixed(2);
+            document.getElementById('resV').textContent = v.toFixed(2) + ' L';
+            document.getElementById('resDktv').textContent = labWeeklyStd.toFixed(2);
+            document.getElementById('resTotal').textContent = totalKtV.toFixed(2);
+
+            // --- NEW: UI BADGE LOGIC ---
+            const badge = document.getElementById('badge');
+            
+            if (freq === 3) {
+                // Thrice weekly targets spKt/V per session.
+                badge.textContent = `Thrice Weekly (Target spKt/V ≥ 1.4/session)`;
+                badge.style.backgroundColor = 'rgba(79, 70, 229, 0.1)'; 
+                badge.style.color = '#4f46e5';
             } else {
-                errorMsg.style.display = 'none';
+                // Non-thrice weekly targets weekly stdKt/V.
+                let target = 2.3;
+                let min = 2.1;
+
+                if (totalKtV >= target) {
+                    badge.textContent = `Adequate (Target stdKt/V ≥ ${target})`;
+                    badge.style.backgroundColor = 'rgba(16, 185, 129, 0.1)'; 
+                    badge.style.color = '#10b981';
+                } else if (totalKtV >= min) {
+                    badge.textContent = `Marginal (Min ≥ ${min}, Target ${target})`;
+                    badge.style.backgroundColor = 'rgba(245, 158, 11, 0.1)'; 
+                    badge.style.color = '#f59e0b';
+                } else {
+                    badge.textContent = `Inadequate (Below stdKt/V ${min})`;
+                    badge.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; 
+                    badge.style.color = '#ef4444';
+                }
             }
 
-            // Calculation Formula
-            let recirculation = ((S - A) / (S - V)) * 100;
-            
-            // Handle negative values (can happen due to slight lab variance when recirculation is 0)
-            if (recirculation < 0) recirculation = 0;
-
-            // Update UI values
-            document.getElementById('resValue').textContent = recirculation.toFixed(1) + '%';
-
-            const badge = document.getElementById('resBadge');
-            const action = document.getElementById('resAction');
-
-            // Evaluate thresholds based on general clinical standards (KDOQI)
-            if (recirculation < 5) {
-                badge.textContent = "Normal (< 5%)";
-                badge.className = "badge normal";
-                action.textContent = "No significant recirculation detected. Continue routine access monitoring and standard dialysis care.";
-            } else if (recirculation >= 5 && recirculation < 10) {
-                badge.textContent = "Marginal (5% - 10%)";
-                badge.className = "badge warning";
-                action.textContent = "Mild recirculation present. If the patient has an AV Fistula, this warrants further investigation. Ensure proper needle placement (needles should be > 1.5 inches apart, unreversed). If needles are correct, consider referral for fistulogram/access study.";
-            } else {
-                badge.textContent = "Abnormal (> 10%)";
-                badge.className = "badge danger";
-                action.textContent = "Significant recirculation detected. Verify needle placement immediately (ensure lines are not reversed). If needle placement is correct, prompt referral for a vascular access study (fistulogram or ultrasound) is highly recommended to rule out venous stenosis.";
-            }
-
-            // Show results and print button
-            results.style.display = 'block';
+            document.getElementById('results').style.display = 'block';
             document.getElementById('printBtn').style.display = 'flex';
-            
-            // Scroll to results
-            results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+
+            generateAIInsights({ sex, age, weight, height, uVol, kru: kru.toFixed(2), krc: krc.toFixed(2), meanGfr: meanGfr.toFixed(2), renalKtV: renalKtV.toFixed(2), totalKtV: totalKtV.toFixed(2), freq, v: v.toFixed(2), labWeeklyStd: labWeeklyStd.toFixed(2) });
         }
     </script>
 </body>
