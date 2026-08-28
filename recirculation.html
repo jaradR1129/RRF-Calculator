@@ -69,8 +69,9 @@
 
         .action-bar {
             display: flex;
+            align-items: center;
             justify-content: flex-end;
-            gap: 12px;
+            gap: 10px;
             padding: 20px 30px 0;
             position: absolute;
             top: 0;
@@ -152,7 +153,6 @@
             gap: 8px;
         }
 
-        /* NEW: Illustration Button Styling */
         .illustration-btn {
             background-color: var(--bg-card);
             color: var(--primary);
@@ -374,7 +374,6 @@
             transform: translateY(-2px);
         }
 
-        /* NEW: Modal Dialog Styling */
         dialog.modal {
             background-color: var(--bg-card);
             color: var(--text-main);
@@ -433,11 +432,52 @@
             border: 1px solid var(--border);
         }
 
+        /* PRINT STYLES */
         @media print {
-            .action-bar, .calculate-btn, #calcForm, .illustration-btn { display: none !important; }
-            .card { box-shadow: none; border: none; }
-            .results-section { display: block !important; border: 2px solid #000; margin-top: 0; }
-            body { background: white; padding: 0; }
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+            }
+            .action-bar, .calculate-btn, .illustration-btn, dialog.modal {
+                display: none !important;
+            }
+            .container {
+                max-width: 100% !important;
+            }
+            .card {
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .header {
+                border-bottom: 2px solid #0f172a !important;
+                padding: 20px 0 !important;
+                background: transparent !important;
+            }
+            .header h1 {
+                color: #0f172a !important;
+                font-size: 1.5rem !important;
+            }
+            .protocol-box {
+                border: 1px solid #cbd5e1 !important;
+                background: #f8fafc !important;
+                break-inside: avoid;
+            }
+            .results-section {
+                display: block !important;
+                border: 1px solid #94a3b8 !important;
+                margin-top: 20px !important;
+                background: #ffffff !important;
+                break-inside: avoid;
+            }
+            .clinical-action {
+                border: 1px solid #cbd5e1 !important;
+                background: #f8fafc !important;
+            }
+            .fine-print {
+                margin-top: 20px !important;
+                border-top: 1px solid #cbd5e1 !important;
+            }
         }
     </style>
 </head>
@@ -446,13 +486,20 @@
     <div class="container">
         <div class="card">
             <div class="action-bar">
-                <a href="index.html" class="app-switch-btn">
+                <a href="index.html" class="app-switch-btn" title="Switch to Residual Renal Function Calculator">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    RRF Calc
+                    <span>RRF Calc</span>
                 </a>
-                <button class="icon-btn" id="printBtn" onclick="window.print()" style="display:none;" title="Print Results">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                
+                <!-- PERMANENT PRINT BUTTON -->
+                <button class="icon-btn" id="printBtn" onclick="triggerPrint()" title="Print Results">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 9V2h12v7"/>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                        <rect width="12" height="8" x="6" y="14"/>
+                    </svg>
                 </button>
+
                 <button class="icon-btn" id="themeBtn" title="Toggle Theme">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                 </button>
@@ -552,11 +599,13 @@
     </dialog>
 
     <script>
+        let calculated = false;
+
         // Theme toggle logic
         const themeBtn = document.getElementById('themeBtn');
         themeBtn.addEventListener('click', () => document.body.classList.toggle('dark-mode'));
 
-        // NEW: Modal Logic
+        // Modal Logic
         const modal = document.getElementById('illustration-modal');
         const showBtn = document.getElementById('show-illustration-btn');
         const closeBtn = document.getElementById('close-modal-btn');
@@ -578,6 +627,18 @@
                 modal.close();
             }
         });
+
+        function triggerPrint() {
+            if (!calculated) {
+                const form = document.getElementById('calcForm');
+                if (form.reportValidity()) {
+                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    setTimeout(() => window.print(), 300);
+                }
+            } else {
+                window.print();
+            }
+        }
 
         function calculate(e) {
             e.preventDefault();
@@ -624,9 +685,9 @@
                 action.textContent = "Significant recirculation detected. Verify needle placement immediately (ensure lines are not reversed). If needle placement is correct, prompt referral for a vascular access study (fistulogram or ultrasound) is highly recommended to rule out venous stenosis.";
             }
 
-            // Show results and print button
+            // Show results
             results.style.display = 'block';
-            document.getElementById('printBtn').style.display = 'flex';
+            calculated = true;
             
             // Scroll to results
             results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
