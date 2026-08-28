@@ -69,8 +69,9 @@
 
         .action-bar {
             display: flex;
+            align-items: center;
             justify-content: flex-end;
-            gap: 12px;
+            gap: 10px;
             padding: 20px 30px 0;
             position: absolute;
             top: 0;
@@ -78,7 +79,6 @@
             z-index: 10;
         }
 
-        /* NEW SWITCH BUTTON STYLES */
         .switch-app-btn {
             display: flex;
             align-items: center;
@@ -517,13 +517,48 @@
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* ADDED TO HIDE SWITCH BUTTON DURING PRINTING */
+        /* PRINT STYLES */
         @media print {
-            .action-bar, .calculate-btn, #calcForm, .ai-assistant-container, .modal-overlay, .switch-app-btn { display: none !important; }
-            .calculator-container { box-shadow: none; border: none; max-width: 100%; }
-            .results-section { display: block !important; border: 2px solid #000; margin-top: 0; }
-            .header { border-bottom: 3px solid #000; padding: 30px 0; }
-            body { background: white; padding: 0; }
+            body { 
+                background: white !important; 
+                color: black !important;
+                padding: 0 !important;
+            }
+            .action-bar, .calculate-btn, .modal-overlay, .ai-assistant-container, .switch-app-btn { 
+                display: none !important; 
+            }
+            .calculator-container { 
+                box-shadow: none !important; 
+                border: none !important; 
+                max-width: 100% !important; 
+            }
+            .header { 
+                border-bottom: 2px solid #0f172a !important; 
+                padding: 20px 0 !important;
+                background: transparent !important;
+            }
+            .header h1 {
+                color: #0f172a !important;
+                font-size: 1.5rem !important;
+            }
+            .results-section { 
+                display: block !important; 
+                border: 1px solid #94a3b8 !important; 
+                margin-top: 20px !important;
+                background: #ffffff !important;
+                break-inside: avoid;
+            }
+            .stat-card {
+                border: 1px solid #cbd5e1 !important;
+                background: #f8fafc !important;
+            }
+            .target-indicator {
+                border: 1px solid #94a3b8 !important;
+            }
+            .fine-print {
+                margin-top: 20px !important;
+                border-top: 1px solid #cbd5e1 !important;
+            }
         }
     </style>
 </head>
@@ -559,14 +594,27 @@
                 <span>Recirculation</span>
             </a>
             
-            <button class="icon-btn" onclick="toggleModal('guidelinesModal')" title="KDOQI Guidelines"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></button>
-            <button class="icon-btn" id="printBtn" onclick="window.print()" style="display:none;" title="Print"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg></button>
-            <button class="icon-btn" id="themeBtn" title="Theme"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+            <button class="icon-btn" onclick="toggleModal('guidelinesModal')" title="KDOQI Guidelines">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </button>
+            
+            <!-- PRINT BUTTON -->
+            <button class="icon-btn" id="printBtn" onclick="triggerPrint()" title="Print Summary Report">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 9V2h12v7"/>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                    <rect width="12" height="8" x="6" y="14"/>
+                </svg>
+            </button>
+            
+            <button class="icon-btn" id="themeBtn" title="Theme">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
         </div>
 
         <div class="header">
             <h1>Residual Renal Function Calculator</h1>
-            <p>Determine the combined weekly stdKtV from RRF and Hemodialysis</p>
+            <p>Determine the combined weekly stdKt/V from RRF and Hemodialysis</p>
         </div>
 
         <div class="form-body">
@@ -647,9 +695,9 @@
     </div>
 
     <script>
-        // NO MORE API KEY HERE!
         let currentInsights = { note: "", patient: "" };
         let activeTab = 'note';
+        let calculated = false;
 
         function toggleModal(id) {
             const m = document.getElementById(id);
@@ -658,6 +706,18 @@
 
         const themeBtn = document.getElementById('themeBtn');
         themeBtn.addEventListener('click', () => document.body.classList.toggle('dark-mode'));
+
+        function triggerPrint() {
+            if (!calculated) {
+                const form = document.getElementById('calcForm');
+                if (form.reportValidity()) {
+                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    setTimeout(() => window.print(), 300);
+                }
+            } else {
+                window.print();
+            }
+        }
 
         function switchAITab(tab) {
             activeTab = tab;
@@ -686,21 +746,18 @@
                         return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
                     }
                     
-                    // If the server is busy (503) or rate-limited (429) and we have retries left
                     if ((response.status === 503 || response.status === 429) && i < retries - 1) {
                         console.warn(`Attempt ${i + 1} failed. Server busy. Retrying in ${delay}ms...`);
                         await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 2; // Double the wait time for the next attempt
-                        continue; // Go back to the top of the loop and try again
+                        delay *= 2;
+                        continue;
                     }
                     
-                    // If out of retries or it's a different error entirely
                     const errorData = await response.json().catch(() => ({}));
                     console.error("Server Error:", response.status, errorData);
                     return `Error: AI service is currently overloaded. Please try again in a few minutes.`;
 
                 } catch (e) {
-                    // For general network connection issues
                     if (i < retries - 1) {
                         await new Promise(resolve => setTimeout(resolve, delay));
                         delay *= 2;
@@ -730,7 +787,6 @@
             const out = document.getElementById('aiOutput');
             out.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><span>Generating clinical analysis...</span></div>`;
 
-            // --- NEW: DYNAMIC KDOQI TARGET LOGIC ---
             let kdoqiGuideline = "";
             if (data.freq === 3) {
                 kdoqiGuideline = "Target is based on spKt/V: 1.4 per session (minimum 1.2 per session). Note: The calculated data aggregates weekly stdKt/V, so contextualize the difference between the provided weekly stdKt/V and the per-session spKt/V guidelines.";
@@ -754,7 +810,6 @@
                 Instructions: Plain text only. No markdown formatting. No fluff.`
             };
 
-            // Ask for the note first, wait, then ask for the explanation
             const n = await getGeminiInsight(systemContext + " " + prompts.note);
             const p = await getGeminiInsight(systemContext + " " + prompts.patient);
 
@@ -796,16 +851,13 @@
             document.getElementById('resDktv').textContent = labWeeklyStd.toFixed(2);
             document.getElementById('resTotal').textContent = totalKtV.toFixed(2);
 
-            // --- NEW: UI BADGE LOGIC ---
             const badge = document.getElementById('badge');
             
             if (freq === 3) {
-                // Thrice weekly targets spKt/V per session.
                 badge.textContent = `Thrice Weekly (Target spKt/V ≥ 1.4/session)`;
                 badge.style.backgroundColor = 'rgba(79, 70, 229, 0.1)'; 
                 badge.style.color = '#4f46e5';
             } else {
-                // Non-thrice weekly targets weekly stdKt/V.
                 let target = 2.3;
                 let min = 2.1;
 
@@ -825,8 +877,8 @@
             }
 
             document.getElementById('results').style.display = 'block';
-            document.getElementById('printBtn').style.display = 'flex';
             document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+            calculated = true;
 
             generateAIInsights({ sex, age, weight, height, uVol, kru: kru.toFixed(2), krc: krc.toFixed(2), meanGfr: meanGfr.toFixed(2), renalKtV: renalKtV.toFixed(2), totalKtV: totalKtV.toFixed(2), freq, v: v.toFixed(2), labWeeklyStd: labWeeklyStd.toFixed(2) });
         }
